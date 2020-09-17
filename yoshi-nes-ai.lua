@@ -74,11 +74,12 @@ end
 
 --TODO: would be more efficient in reverse
 function indexOfLastInstanceOf(table, value)
-    index = 0
     for k, v in ipairs(table) do
-        if v == value then index = k end
+        if v == value then
+            return k
+        end
     end
-    return index
+    return 0
 end
 
 function tablesEqualOrder(table1, table2)

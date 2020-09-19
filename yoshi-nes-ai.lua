@@ -13,6 +13,9 @@ Ternary:
     : = or
 ]] --
 
+--[[package.cpath = package.cpath .. ';D:/JetBrains/Toolbox/apps/IDEA-U/ch-0/202.7319.50.plugins/intellij-emmylua/classes/debugger/emmy/windows/x64/?.dll'
+local dbg = require('emmy_core')
+dbg.tcpListen('localhost', 9966)]]--
 
 --https://stackoverflow.com/a/15278426/12861567
 function combineTables(table1, table2)
@@ -42,7 +45,9 @@ end
 --https://stackoverflow.com/a/33511182/12861567
 function hasValue(table, value)
     for k, v in ipairs(table) do
-        if v == value then return true end
+        if v == value then
+            return true
+        end
     end
     return false
 end
@@ -60,14 +65,18 @@ end
 function instancesOf(table, value)
     inst = 0
     for k, v in ipairs(table) do
-        if v == value then inst = inst + 1 end
+        if v == value then
+            inst = inst + 1
+        end
     end
     return inst
 end
 
 function firstIndexOf(table, value)
     for k, v in ipairs(table) do
-        if v == value then return k end
+        if v == value then
+            return k
+        end
     end
     return 0
 end
@@ -84,7 +93,9 @@ end
 
 function tablesEqualOrder(table1, table2)
     for i = 1, #table1 do
-        if not (table1[i] == table2[i]) then return false end
+        if not (table1[i] == table2[i]) then
+            return false
+        end
     end
     return true
 end
@@ -137,7 +148,9 @@ function getTopPiece(column)
     end
     return 0]] --
     for k, v in ipairs(column) do
-        if v > 0 then return v end
+        if v > 0 then
+            return v
+        end
     end
     return 0
 end
@@ -189,11 +202,13 @@ function simplifyMoves_Table(moves)
     if moves then
         i = 1
         while i < #moves + 1 do
-            if i < #moves and moves[i] == moves[i + 1] then --AA
+            if i < #moves and moves[i] == moves[i + 1] then
+                --AA
                 table.remove(moves, i)
                 table.remove(moves, i)
                 i = 1
-            elseif i < #moves - 2 and moves[i] == moves[i + 2] and moves[i + 1] == moves[i + 3] and areConsecutiveNums(moves[i], moves[i + 1]) then --ABAB
+            elseif i < #moves - 2 and moves[i] == moves[i + 2] and moves[i + 1] == moves[i + 3] and areConsecutiveNums(moves[i], moves[i + 1]) then
+                --ABAB
                 table.remove(moves, i)
                 table.remove(moves, i + 2)
                 i = 1
@@ -250,7 +265,9 @@ end
 
 --pauses for a random amount of time
 function randomPause(cap)
-    if not (cap) then cap = 5 end
+    if not (cap) then
+        cap = 5
+    end
     for i = 0, math.random(cap) do
         emu.frameadvance()
     end
@@ -411,7 +428,9 @@ end
 --TODO: for each
 function bestPieceLocation(piece, avoidPos)
     assert(piece > 0, "tried to place nothing")
-    if not avoidPos then avoidPos = {} end
+    if not avoidPos then
+        avoidPos = {}
+    end
     --[[if avoidPos then
         if piece == 5 then
             biggestEggStack = 0
@@ -591,7 +610,9 @@ do
         emu.frameadvance()
     end
 
-    if randomize then randomPause() end
+    if randomize then
+        randomPause()
+    end
 
     --change type to b if chosen
     if settings[1] == "B" then
@@ -599,7 +620,9 @@ do
         emu.frameadvance()
     end
 
-    if randomize then randomPause() end
+    if randomize then
+        randomPause()
+    end
 
     joypad.set(1, { down = true })
     emu.frameadvance()
@@ -615,7 +638,9 @@ do
         end
     end
 
-    if randomize then randomPause() end
+    if randomize then
+        randomPause()
+    end
 
     joypad.set(1, { down = true })
     emu.frameadvance()
@@ -628,7 +653,9 @@ do
         emu.frameadvance()
     end
 
-    if randomize then randomPause() end
+    if randomize then
+        randomPause()
+    end
 
     joypad.set(1, { down = true })
     emu.frameadvance()
@@ -643,7 +670,9 @@ do
         end
     end
 
-    if randomize then randomPause() end
+    if randomize then
+        randomPause()
+    end
 
     joypad.set(1, { down = true })
     emu.frameadvance()
@@ -674,5 +703,6 @@ do
         readBoard()
         placeFallingPieces()
         emu.frameadvance()
+
     end
 end

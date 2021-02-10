@@ -4,3 +4,6 @@
 --- DateTime: 9/18/2020 13:01
 ---
 
+function testFunc()
+    print("test func worked")
+end

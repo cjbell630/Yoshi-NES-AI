@@ -17,34 +17,46 @@ Ternary:
 local dbg = require('emmy_core')
 dbg.tcpListen('localhost', 9966)]]--
 
---https://stackoverflow.com/a/15278426/12861567
-function combineTables(table1, table2)
+---Concatenates two tables. (adds second table onto end of first table)
+---https://stackoverflow.com/a/15278426/12861567
+---@param table1 table first table
+---@param table2 table second table
+---@return table the two tables concatenated together
+function concatTables(table1, table2)
     --[[for i = 1, #t2 do
         t1[#t1 + 1] = t2[i]
     end
     return t1]] --
-    for k, v in ipairs(table2) do
+    for _, v in ipairs(table2) do
         table1[#table1 + 1] = v
     end
     return table1
 end
 
---modified https://stackoverflow.com/a/22460068/12861567
+---Creates a string out of a table.
+---Modified from https://stackoverflow.com/a/22460068/12861567
+---@param table table the table to make a string out of
+---@return string the table represented as a string
 function table.toString(table)
+    --TODO: maybe shouldnt be table.toString bc that's not right
     if table then
-        string = ""
+        local tabString = ""
         for k, v in ipairs(table) do
-            string = string .. v .. ", "
+            tabString = tabString .. v .. ", "
         end
-        return string.sub(string, 1, #string - 2)
+        return string.sub(tabString, 1, #tabString - 2)
     else
         return ""
     end
 end
 
---https://stackoverflow.com/a/33511182/12861567
+---Checks if the given table contains the given value.
+---from: https://stackoverflow.com/a/33511182/12861567
+---@param table table<any> the table to check
+---@param value any the value to look for
+---@return boolean true if the value is found, false if not
 function hasValue(table, value)
-    for k, v in ipairs(table) do
+    for _, v in ipairs(table) do
         if v == value then
             return true
         end
@@ -52,9 +64,13 @@ function hasValue(table, value)
     return false
 end
 
---based on function above, returns true if the table only has the value specified
+---Checks if the every value in the given table equals the given value.
+---based on hasValue
+---@param table table<any> the table to check
+---@param value any the value to look for
+---@return boolean true if only the value is found, false if not
 function onlyHasValue(table, value)
-    for k, v in ipairs(table) do
+    for _, v in ipairs(table) do
         if not (v == value) then
             return false
         end
@@ -62,9 +78,13 @@ function onlyHasValue(table, value)
     return true
 end
 
+---Counts the number of times the given value is present in the given table.
+---@param table table<any> the table to check
+---@param value any the value to look for
+---@return number the number of instances of the value found in the table
 function instancesOf(table, value)
     inst = 0
-    for k, v in ipairs(table) do
+    for _, v in ipairs(table) do
         if v == value then
             inst = inst + 1
         end
@@ -72,6 +92,10 @@ function instancesOf(table, value)
     return inst
 end
 
+---Finds and returns the first index of the given value in the given table.
+---@param table table<any> the table to check
+---@param value any the value to look for
+---@return number the first index of the value in the table
 function firstIndexOf(table, value)
     for k, v in ipairs(table) do
         if v == value then
@@ -81,8 +105,9 @@ function firstIndexOf(table, value)
     return 0
 end
 
---TODO: would be more efficient in reverse
+--TODO: this function doesnt even do what it's supposed to, but even if it did, it's not even used
 function indexOfLastInstanceOf(table, value)
+    --TODO: would be more efficient in reverse
     for k, v in ipairs(table) do
         if v == value then
             return k
@@ -147,7 +172,7 @@ function getTopPiece(column)
         end
     end
     return 0]] --
-    for k, v in ipairs(column) do
+    for _, v in ipairs(column) do
         if v > 0 then
             return v
         end
@@ -576,6 +601,8 @@ function bestPieceLocation(piece, avoidPos)
 end
 
 do
+    require "test"
+    testFunc()
     --stuff--
     --TODO: when finished, change "off" to "on"
     local settings = { "A", "1", "low", "1", "off" }
@@ -631,8 +658,8 @@ do
 
     --set level
     if not (settings[2] == "1") then
-        --print("that is definititely not a 1, im sure of it")
-        for i = 2, (tonumber(settings[2])) do
+        --print("that is definitively not a 1, im sure of it")
+        for _ = 2, (tonumber(settings[2])) do
             joypad.set(1, { right = true })
             emu.frameadvance()
             emu.frameadvance()

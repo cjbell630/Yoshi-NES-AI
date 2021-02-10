@@ -109,7 +109,7 @@ end
 
 --NOTE: 0 = nothing, 1 = goomba, 2 = plant, 3 = boo, 4 = blooper, 5 = top egg, 6 = bottom egg
 
-local board = {
+board = {
     --[[top   ->  bottom]] --
     { 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -171,7 +171,7 @@ function getColumnSize(column)
 end
 
 function getColumn(columnNumber)
-    columnTable = {}
+    local columnTable = {}
     for j = 1, 8 do
         columnTable[j] = memory.readbyte(0x0490 + (j - 1) + ((columnNumber - 1) * 9))
     end
@@ -200,7 +200,7 @@ end
 function simplifyMoves_Table(moves)
     print("simplifying " .. table.toString(moves))
     if moves then
-        i = 1
+        local i = 1
         while i < #moves + 1 do
             if i < #moves and moves[i] == moves[i + 1] then
                 --AA
@@ -225,11 +225,11 @@ end
 
 function generateMoves_Table(goalBoard)
     print("generating moves")
-    currentSimBoard = { 1, 2, 3, 4 }
-    moves = {}
-    index = 1
+    local currentSimBoard = { 1, 2, 3, 4 }
+    local moves = {}
+    local index = 1
     while not (tablesEqualOrder(currentSimBoard, goalBoard) or index > #goalBoard) do
-        simIndex = firstIndexOf(currentSimBoard, goalBoard[index])
+        local simIndex = firstIndexOf(currentSimBoard, goalBoard[index])
         table.insert(currentSimBoard, index, currentSimBoard[simIndex])
         table.remove(currentSimBoard, simIndex + 1)
         for i = simIndex - 1, index, -1 do
@@ -268,7 +268,7 @@ function randomPause(cap)
     if not (cap) then
         cap = 5
     end
-    for i = 0, math.random(cap) do
+    for _ = 0, math.random(cap) do
         emu.frameadvance()
     end
 end
@@ -296,8 +296,8 @@ end
 
 function swapAtPos(pos)
     putMarioAtPos(pos)
-    originalOrientation = getMarioOrientation()
-    targetOrientation = originalOrientation == 0 and 4 or 0
+    local originalOrientation = getMarioOrientation()
+    local targetOrientation = originalOrientation == 0 and 4 or 0
     --TODO: remove print("going to hold A until mario orientation is not "..targetOrientation)
     --TODO: remove print("mario orientation started at "..originalOrientation)
     while getMarioOrientation() == originalOrientation do
@@ -317,8 +317,8 @@ function moveColumn(column, targetPos)
         --TODO: column 1 to pos 2 results in a swap position of 1 instead of 0
         --TODO: make it work for A, 5, high, 1
         print("need to move column " .. column .. " to position " .. targetPos)
-        range = targetPos - column
-        sign = range / math.abs(range)
+        local range = targetPos - column
+        local sign = range / math.abs(range)
         --QUESTION: why the hell does it run when they're equal
         print("iterating from 0 to " .. math.abs(range))
         if not (range == 0) then
@@ -332,10 +332,10 @@ end
 --places all falling pieces
 --TODO: make for each loop
 function placeFallingPieces()
-    goalBoard = { 0, 0, 0, 0 }
-    placedPieces = 0
-    fallingPieces = getFallingPieces()
-    placingOrder = {}
+    local goalBoard = { 0, 0, 0, 0 }
+    local placedPieces = 0
+    local fallingPieces = getFallingPieces()
+    local placingOrder = {}
     --TODO: make it ignore situations where there is one match and two pieces both trying to target it
     for i = 1, 4 do
         if fallingPieces[i] == 5 then
@@ -368,10 +368,10 @@ function placeFallingPieces()
             end
         end
     end]] --
-    startPositions = {}
-    endPositions = {}
+    local startPositions = {}
+    local endPositions = {}
     for i = 1, #placingOrder do
-        currentPos = placingOrder[i]
+        local currentPos = placingOrder[i]
         if fallingPieces[currentPos] > 0 then
             if placedPieces == 0 then
                 goalBoard[currentPos] = bestPieceLocation(fallingPieces[currentPos]) --I think this is right
@@ -496,15 +496,15 @@ function bestPieceLocation(piece, avoidPos)
         end
     else]] --
     if piece == 5 then
-        biggestEggStack = 0
-        biggestEggStackIndex = 0
+        local biggestEggStack = 0
+        local biggestEggStackIndex = 0
         for i = 1, 4 do
             if not (hasValue(avoidPos, i)) then
-                j = 1
+                local j = 1
                 while board[i][j] == 0 and j < 9 do
                     j = j + 1
                 end
-                count = 0
+                local count = 0
                 while not (board[i][j] == 6) and j < 9 do
                     count = count + 1
                     j = j + 1
@@ -525,10 +525,11 @@ function bestPieceLocation(piece, avoidPos)
         end
         return biggestEggStackIndex
     else
-        matches = doColumnsHaveMatch(piece)
-        biggestHeight = 0
-        biggestHeightIndex = -1
+        local matches = doColumnsHaveMatch(piece)
+        local biggestHeight = 0
+        local biggestHeightIndex = -1
         --match pieces
+        local cs
         for i = 1, 4 do
             cs = getColumnSize(board[i])
             if matches[i] and cs > biggestHeight and not (hasValue(avoidPos, i)) then
@@ -540,10 +541,10 @@ function bestPieceLocation(piece, avoidPos)
             return biggestHeightIndex
         end
         --place on shortest stack
-        smallestHeight = 9
-        smallestHeightIndex = 0
-        oneSize = true
-        firstSize = getColumnSize(getColumn(1))
+        local smallestHeight = 9
+        local smallestHeightIndex = 0
+        local oneSize = true
+        local firstSize = getColumnSize(getColumn(1))
         for i = 1, 4 do
             cs = getColumnSize(getColumn(i))
             --TODO: remove: print("size of column "..i..": "..cs)
@@ -558,7 +559,7 @@ function bestPieceLocation(piece, avoidPos)
         if oneSize then
             print("all columns are " .. firstSize .. " pieces tall")
             print("going to try to drop piece on a duplicate")
-            topPieces = { getTopPiece(board[1]), getTopPiece(board[2]), getTopPiece(board[3]), getTopPiece(board[4]) }
+            local topPieces = { getTopPiece(board[1]), getTopPiece(board[2]), getTopPiece(board[3]), getTopPiece(board[4]) }
             --TODO: not ==
             --TODO: prioritize bottom eggs over duplicates and make them count
             for i = 1, 4 do
@@ -577,7 +578,7 @@ end
 do
     --stuff--
     --TODO: when finished, change "off" to "on"
-    settings = { "A", "1", "low", "1", "off" }
+    local settings = { "A", "1", "low", "1", "off" }
 
     --handle args
     if arg then
@@ -594,7 +595,7 @@ do
     --TODO: make into a function
     --TODO: make sure selector is in the right place instead of counting frames
 
-    randomize = settings[5] == "on"
+    local randomize = settings[5] == "on"
 
     --while memory address 00E3 isn't C
     --  aka egg has not shown up

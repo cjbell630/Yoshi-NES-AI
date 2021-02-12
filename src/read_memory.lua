@@ -158,6 +158,7 @@ function getTopBlock(column)
 end
 
 function doColumnsHaveMatch(block)
+    --TODO: could be getRow(top) -> map i==block
     return { getTopBlock(board[1]) == block, getTopBlock(board[2]) == block, getTopBlock(board[3]) == block, getTopBlock(board[4]) == block }
 end
 
@@ -174,8 +175,8 @@ end
 
 function getColumn(columnNumber)
     local columnTable = {}
-    for j = 1, 8 do
-        columnTable[j] = memory.readbyte(0x0490 + (j - 1) + ((columnNumber - 1) * 9))
+    for i = 1, 8 do
+        columnTable[i] = memory.readbyte(0x0490 + (i - 1) + ((columnNumber - 1) * 9))
     end
     return columnTable
 end

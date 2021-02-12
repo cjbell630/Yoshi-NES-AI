@@ -17,209 +17,15 @@ Ternary:
 local dbg = require('emmy_core')
 dbg.tcpListen('localhost', 9966)]]--
 
----Concatenates two tables. (adds second table onto end of first table)
----https://stackoverflow.com/a/15278426/12861567
----@param table1 table first table
----@param table2 table second table
----@return table the two tables concatenated together
-function concatTables(table1, table2)
-    --[[for i = 1, #t2 do
-        t1[#t1 + 1] = t2[i]
-    end
-    return t1]] --
-    for _, v in ipairs(table2) do
-        table1[#table1 + 1] = v
-    end
-    return table1
-end
-
----Creates a string out of a table.
----Modified from https://stackoverflow.com/a/22460068/12861567
----@param table table the table to make a string out of
----@return string the table represented as a string
-function table.toString(table)
-    --TODO: maybe shouldnt be table.toString bc that's not right
-    if table then
-        local tabString = ""
-        for k, v in ipairs(table) do
-            tabString = tabString .. v .. ", "
-        end
-        return string.sub(tabString, 1, #tabString - 2)
-    else
-        return ""
-    end
-end
-
----Checks if the given table contains the given value.
----from: https://stackoverflow.com/a/33511182/12861567
----@param table table<any> the table to check
----@param value any the value to look for
----@return boolean true if the value is found, false if not
-function hasValue(table, value)
-    for _, v in ipairs(table) do
-        if v == value then
-            return true
-        end
-    end
-    return false
-end
-
----Checks if the every value in the given table equals the given value.
----based on hasValue
----@param table table<any> the table to check
----@param value any the value to look for
----@return boolean true if only the value is found, false if not
-function onlyHasValue(table, value)
-    for _, v in ipairs(table) do
-        if not (v == value) then
-            return false
-        end
-    end
-    return true
-end
-
----Counts the number of times the given value is present in the given table.
----@param table table<any> the table to check
----@param value any the value to look for
----@return number the number of instances of the value found in the table
-function instancesOf(table, value)
-    inst = 0
-    for _, v in ipairs(table) do
-        if v == value then
-            inst = inst + 1
-        end
-    end
-    return inst
-end
-
----Finds and returns the first index of the given value in the given table.
----@param table table<any> the table to check
----@param value any the value to look for
----@return number the first index of the value in the table
-function firstIndexOf(table, value)
-    for k, v in ipairs(table) do
-        if v == value then
-            return k
-        end
-    end
-    return 0
-end
-
---TODO: this function doesnt even do what it's supposed to, but even if it did, it's not even used
-function indexOfLastInstanceOf(table, value)
-    --TODO: would be more efficient in reverse
-    for k, v in ipairs(table) do
-        if v == value then
-            return k
-        end
-    end
-    return 0
-end
-
-function tablesEqualOrder(table1, table2)
-    for i = 1, #table1 do
-        if not (table1[i] == table2[i]) then
-            return false
-        end
-    end
-    return true
-end
-
---oc
-function areConsecutiveNums(num1, num2)
-    return num1 + 1 == num2 or num2 + 1 == num1
-end
+--REQUIRES--
+require "util" --utility functions
+require "read_memory" --utility functions
 
 --FCEUX--
 
 --NOTE: 0 = nothing, 1 = goomba, 2 = plant, 3 = boo, 4 = blooper, 5 = top egg, 6 = bottom egg
 
-board = {
-    --[[top   ->  bottom]] --
-    { 0, 0, 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, 0, 0, 0 }
-}
 
-function getFallingPieces()
-    return { memory.readbyte(0x045A), memory.readbyte(0x045B), memory.readbyte(0x045C), memory.readbyte(0x045D) }
-end
-
-function getMarioPos()
-    return memory.readbyte(0x0440)
-end
-
-function getMarioOrientation()
-    return memory.readbyte(0x0442)
-end
-
-function piecesHaveLanded()
-    return (memory.readbyte(0x0462) < 2) and (memory.readbyte(0x0463) < 2) and (memory.readbyte(0x0464) < 2) and (memory.readbyte(0x0465) < 2)
-end
-
-function anyFallingPieces()
-    return not ((memory.readbyte(0x0462) == 1) or (memory.readbyte(0x0463) == 1) or (memory.readbyte(0x0464) == 1) or (memory.readbyte(0x0465) == 1))
-end
-
---gets the first piece in a column (table) that is not empty, starting from the top
---TODO: change for loop to for each
---TODO: make all these functions just get the column themselves since i never do anything else
-function getTopPiece(column)
-    --[[for i = 1, 8 do
-        if column[i] > 0 then
-            return column[i]
-        end
-    end
-    return 0]] --
-    for _, v in ipairs(column) do
-        if v > 0 then
-            return v
-        end
-    end
-    return 0
-end
-
-function doColumnsHaveMatch(piece)
-    return { getTopPiece(board[1]) == piece, getTopPiece(board[2]) == piece, getTopPiece(board[3]) == piece, getTopPiece(board[4]) == piece }
-end
-
---gets the amount of pieces in a column (table) that are not empty
---TODO: change for loop to for each
-function getColumnSize(column)
-    for i = 1, 8 do
-        if column[i] > 0 then
-            return 9 - i
-        end
-    end
-    return 0
-end
-
-function getColumn(columnNumber)
-    local columnTable = {}
-    for j = 1, 8 do
-        columnTable[j] = memory.readbyte(0x0490 + (j - 1) + ((columnNumber - 1) * 9))
-    end
-    return columnTable
-end
-
---stores every piece in the 2d table "board"
---NOTE: 8 per row
---NOTE: 2 byte spacing, figure out what they do
---NOTE: reads properly, but doesn't reload sprites.
---NOTE: Reloads for matches!! ex can force any two pieces to match by rewriting 😈
---NOTE: 0490-0497 controls column 1 top-bottom
---NOTE: 0499-04A0 controls column 2
---NOTE: 04A2-04A9 controls column 3
---NOTE: 04AB-04B2 controls column 4
-function readBoard()
-    for i = 1, 4 do
-        --[[for j = 1, 8 do
-            board[i][j] = memory.readbyte(0x0490 + (j - 1) + ((i - 1) * 9))
-        end]] --
-        board[i] = getColumn(i)
-    end
-end
 
 --TODO: if needs to be more efficient, try to make all nums consecutive
 function simplifyMoves_Table(moves)
@@ -253,7 +59,9 @@ function generateMoves_Table(goalBoard)
     local currentSimBoard = { 1, 2, 3, 4 }
     local moves = {}
     local index = 1
-    while not (tablesEqualOrder(currentSimBoard, goalBoard) or index > #goalBoard) do
+    while not (
+            tablesEqualOrder(currentSimBoard, goalBoard) or index > #goalBoard
+    ) do
         local simIndex = firstIndexOf(currentSimBoard, goalBoard[index])
         table.insert(currentSimBoard, index, currentSimBoard[simIndex])
         table.remove(currentSimBoard, simIndex + 1)
@@ -273,16 +81,16 @@ function swapAtAllPosInTable(moves)
         print("swapping at " .. table.toString(moves))
         for i = 1, #moves do
             --makes sure that the columns that are being swapped aren't empty to make more efficient
-            --makes sure top pieces arent the same
+            --makes sure top blocks arent the same
             --TODO: i think it's too fast for its own good...
             --TODO: yep, if one stack is taller than the other, it doesn't update in time.
             --TODO: Either find hex value that shows when they're all swapped and wait for that, or let it be stupid.
             --Letting it be stupid for now
-            --if not(getTopPiece(getColumn(moves[i] + 1)) == getTopPiece(getColumn(moves[i] + 2))) then
+            --if not(getTopBlock(getColumn(moves[i] + 1)) == getTopBlock(getColumn(moves[i] + 2))) then
             swapAtPos(moves[i])
             --[[else
                 print("avoided looking stupid :D")
-                print("didn't swap at pos "..moves[i].." because both sides are "..getTopPiece(getColumn(moves[i] + 1)))
+                print("didn't swap at pos "..moves[i].." because both sides are "..getTopBlock(getColumn(moves[i] + 1)))
             end]] --
         end
     end
@@ -290,7 +98,7 @@ end
 
 --pauses for a random amount of time
 function randomPause(cap)
-    if not (cap) then
+    if not cap then
         cap = 5
     end
     for _ = 0, math.random(cap) do
@@ -299,17 +107,17 @@ function randomPause(cap)
 end
 
 function putMarioAtPos(pos)
-    print("mario needs to move from " .. getMarioPos() .. " to " .. pos)
-    if getMarioPos() > pos then
-        while not (getMarioPos() == pos) do
+    print("mario needs to move from " .. MemMap:marioPos() .. " to " .. pos)
+    if MemMap:marioPos() > pos then
+        while MemMap:marioPos() ~= pos do
             print("moving left")
             joypad.set(1, { left = true })
             emu.frameadvance()
             joypad.set(1, { left = false })
             emu.frameadvance()
         end
-    elseif getMarioPos() < pos then
-        while not (getMarioPos() == pos) do
+    elseif MemMap:marioPos() < pos then
+        while MemMap:marioPos() ~= pos do
             joypad.set(1, { right = true })
             emu.frameadvance()
             joypad.set(1, { right = false })
@@ -321,17 +129,18 @@ end
 
 function swapAtPos(pos)
     putMarioAtPos(pos)
-    local originalOrientation = getMarioOrientation()
-    local targetOrientation = originalOrientation == 0 and 4 or 0
+    local startingFrame = MemMap:marioFrame()
+    local endingFrame = startingFrame == 0 and 4 or 0
     --TODO: remove print("going to hold A until mario orientation is not "..targetOrientation)
     --TODO: remove print("mario orientation started at "..originalOrientation)
-    while getMarioOrientation() == originalOrientation do
+    while MemMap:marioFrame() == startingFrame do
         joypad.set(1, { A = true })
         emu.frameadvance()
         joypad.set(1, { A = false })
         emu.frameadvance()
     end
-    while not (getMarioOrientation() == targetOrientation) do
+    while MemMap:marioFrame() ~= endingFrame do
+        -- NOTE: says NOT EQUALS
         joypad.set(1, { A = false })
         emu.frameadvance()
     end
@@ -346,7 +155,7 @@ function moveColumn(column, targetPos)
         local sign = range / math.abs(range)
         --QUESTION: why the hell does it run when they're equal
         print("iterating from 0 to " .. math.abs(range))
-        if not (range == 0) then
+        if range ~= 0 then
             for i = 0, math.abs(range) - 1 do
                 swapAtPos(column + (i * sign) + ((sign - 3) / 2))
             end
@@ -354,41 +163,46 @@ function moveColumn(column, targetPos)
     end
 end
 
---places all falling pieces
+--places all falling blocks
 --TODO: make for each loop
-function placeFallingPieces()
+function placeFallingBlocks()
     local goalBoard = { 0, 0, 0, 0 }
-    local placedPieces = 0
-    local fallingPieces = getFallingPieces()
+    local placedBlocks = 0
+    local fallingBlocks = MemMap:fallingBlocks()
     local placingOrder = {}
-    --TODO: make it ignore situations where there is one match and two pieces both trying to target it
+    --TODO: make it ignore situations where there is one match and two blocks both trying to target it
     for i = 1, 4 do
-        if fallingPieces[i] == 5 then
-            if hasValue(board[1], 6) or hasValue(board[2], 6) or hasValue(board[3], 6) or hasValue(board[4], 6) then
+        if fallingBlocks[i] == Blocks.TOP_EGG then
+            --TODO: should be repalced with something like "hasValue(board, Blocks.BOTTOM_EGG)"
+            if hasValue(board[1], Blocks.BOTTOM_EGG) or
+                    hasValue(board[2], Blocks.BOTTOM_EGG) or
+                    hasValue(board[3], Blocks.BOTTOM_EGG) or
+                    hasValue(board[4], Blocks.BOTTOM_EGG)
+            then
                 table.insert(placingOrder, 1, i)
                 print("prioritizing the top egg falling in column " .. i .. " because there is a bottom egg")
             else
                 table.insert(placingOrder, i)
             end
-        elseif fallingPieces[i] > 0 then
-            if hasValue(doColumnsHaveMatch(fallingPieces[i]), true) then
+        elseif fallingBlocks[i] ~= Blocks.NONE then
+            if hasValue(doColumnsHaveMatch(fallingBlocks[i]), true) then
                 table.insert(placingOrder, 1, i)
-                print("prioritizing the piece " .. fallingPieces[i] .. "because there is a match")
+                print("prioritizing the block " .. fallingBlocks[i] .. "because there is a match")
             else
                 --TODO: maybe placingOrder[#placingOrder + 1] = i
                 table.insert(placingOrder, i)
             end
         end
     end
-    print("piecesOrder=" .. table.toString(placingOrder))
+    print("blocksOrder=" .. table.toString(placingOrder))
     --TODO: literally what is the point of this
     --TODO: seems to force any top eggs to the far right for some stupid reason
     --TODO: was i high or something
-    --[[if not(getTopPiece(board[1]) == 6 or getTopPiece(board[2]) == 6 or getTopPiece(board[3]) == 6 or getTopPiece(board[4]) == 6) then
-        for i = 1, #fallingPieces - 1 do
-            if fallingPieces[i] == 5 then
-                fallingPieces[i] = fallingPieces[i + 1]
-                fallingPieces[i + 1] = 5
+    --[[if not(getTopBlock(board[1]) == 6 or getTopBlock(board[2]) == 6 or getTopBlock(board[3]) == 6 or getTopBlock(board[4]) == 6) then
+        for i = 1, #fallingBlocks - 1 do
+            if fallingBlocks[i] == 5 then
+                fallingBlocks[i] = fallingBlocks[i + 1]
+                fallingBlocks[i + 1] = 5
                 i = 1
             end
         end
@@ -397,17 +211,17 @@ function placeFallingPieces()
     local endPositions = {}
     for i = 1, #placingOrder do
         local currentPos = placingOrder[i]
-        if fallingPieces[currentPos] > 0 then
-            if placedPieces == 0 then
-                goalBoard[currentPos] = bestPieceLocation(fallingPieces[currentPos]) --I think this is right
+        if fallingBlocks[currentPos] > 0 then
+            if placedBlocks == 0 then
+                goalBoard[currentPos] = bestBlockLocation(fallingBlocks[currentPos]) --I think this is right
                 endPositions[1] = currentPos
                 startPositions[1] = goalBoard[currentPos]
-                placedPieces = placedPieces + 1
+                placedBlocks = placedBlocks + 1
             else
-                placedPieces = placedPieces + 1
-                goalBoard[currentPos] = bestPieceLocation(fallingPieces[currentPos], startPositions)
-                startPositions[placedPieces] = goalBoard[currentPos]
-                endPositions[placedPieces] = currentPos
+                placedBlocks = placedBlocks + 1
+                goalBoard[currentPos] = bestBlockLocation(fallingBlocks[currentPos], startPositions)
+                startPositions[placedBlocks] = goalBoard[currentPos]
+                endPositions[placedBlocks] = currentPos
             end
         end
     end
@@ -422,10 +236,10 @@ function placeFallingPieces()
         end
     end
 
-    --print("want piece "..endPositions[1].." to land on column "..startPositions[1])
+    --print("want block "..endPositions[1].." to land on column "..startPositions[1])
     --moveColumn(startPositions[1], endPositions[1])
 
-    print("swapping pieces")
+    print("swapping blocks")
     print("start positions: " .. table.toString(startPositions))
     print("end positions: " .. table.toString(endPositions))
     print("goalBoard: " .. table.toString(goalBoard))
@@ -433,31 +247,31 @@ function placeFallingPieces()
 
     --swapAtAllPosInTable(generateMoves_Table(startPositions, endPositions))
     swapAtAllPosInTable(generateMoves_Table(goalBoard))
-    while not (anyFallingPieces()) do
+    while not MemMap:areBlocksFalling() do
         emu.frameadvance()
     end
 
-    print("sending the pieces down")
+    print("sending the blocks down")
     print("---------------------------------------")
 
-    while not (piecesHaveLanded()) do
+    while MemMap:areBlocksFalling() do
         joypad.set(1, { down = true })
         emu.frameadvance()
     end
 end
 
---calculates and returns the best location to place a given piece
---piece cannot be 0, avoidPos can be null.
+--calculates and returns the best location to place a given block
+--block cannot be 0, avoidPos can be null.
 --TODO: avoid avoidPos
 --TODO: if returns 0, can go anywhere
 --TODO: for each
-function bestPieceLocation(piece, avoidPos)
-    assert(piece > 0, "tried to place nothing")
+function bestBlockLocation(block, avoidPos)
+    assert(block > 0, "tried to place nothing")
     if not avoidPos then
         avoidPos = {}
     end
     --[[if avoidPos then
-        if piece == 5 then
+        if block == 5 then
             biggestEggStack = 0
             biggestEggStackIndex = 0
             for i = 1, 4 do
@@ -495,7 +309,7 @@ function bestPieceLocation(piece, avoidPos)
                 --check as long as it's not the avoidpos
                 if not(avoidPos == i) then
                     cs = getColumnSize(board[i])
-                    if getTopPiece(board[i]) == piece and cs > biggestHeight then
+                    if getTopBlock(board[i]) == block and cs > biggestHeight then
                         biggestHeight = cs
                         biggestHeightIndex = i
                     end
@@ -520,25 +334,28 @@ function bestPieceLocation(piece, avoidPos)
             return smallestHeightIndex
         end
     else]] --
-    if piece == 5 then
+
+    --TODO: change these magic numbers to Block.XXX
+    if block == Blocks.TOP_EGG then
         local biggestEggStack = 0
         local biggestEggStackIndex = 0
         for i = 1, 4 do
-            if not (hasValue(avoidPos, i)) then
+            --TODO: what do all the 9s here mean? (and 8s, I think 8s would be 9 - 1)
+            if not hasValue(avoidPos, i) then
                 local j = 1
                 while board[i][j] == 0 and j < 9 do
                     j = j + 1
                 end
                 local count = 0
-                while not (board[i][j] == 6) and j < 9 do
+                while board[i][j] ~= Blocks.BOTTOM_EGG and j < 9 do
                     count = count + 1
                     j = j + 1
                 end
                 --TODO: seems like it could cause some sort of index oob error if it tried to call board[i][9]
-                if board[i][j] == 6 then
+                if board[i][j] == Blocks.BOTTOM_EGG then
                     count = count + 1
                 end
-                if j == 9 and not (board[i][8] == 6) then
+                if j == 9 and board[i][8] ~= Blocks.BOTTOM_EGG then
                     count = 0
                 end
                 print("egg stack count of column " .. i .. ": " .. count)
@@ -550,45 +367,46 @@ function bestPieceLocation(piece, avoidPos)
         end
         return biggestEggStackIndex
     else
-        local matches = doColumnsHaveMatch(piece)
+        local matches = doColumnsHaveMatch(block)
         local biggestHeight = 0
         local biggestHeightIndex = -1
-        --match pieces
-        local cs
+        --match blocks
+        local colSize
         for i = 1, 4 do
-            cs = getColumnSize(board[i])
-            if matches[i] and cs > biggestHeight and not (hasValue(avoidPos, i)) then
-                biggestHeight = cs
+            colSize = getColumnSize(board[i])
+            if matches[i] and colSize > biggestHeight and not (hasValue(avoidPos, i)) then
+                biggestHeight = colSize
                 biggestHeightIndex = i
             end
         end
-        if not (biggestHeightIndex == -1) then
+        if biggestHeightIndex ~= -1 then
             return biggestHeightIndex
         end
         --place on shortest stack
         local smallestHeight = 9
         local smallestHeightIndex = 0
+        --TODO: what is oneSize?
         local oneSize = true
         local firstSize = getColumnSize(getColumn(1))
         for i = 1, 4 do
-            cs = getColumnSize(getColumn(i))
+            colSize = getColumnSize(getColumn(i))
             --TODO: remove: print("size of column "..i..": "..cs)
-            if not (hasValue(avoidPos, i)) then
-                oneSize = oneSize and cs == firstSize
-                if cs < smallestHeight then
-                    smallestHeight = cs
+            if not hasValue(avoidPos, i) then
+                oneSize = (oneSize and colSize == firstSize)
+                if colSize < smallestHeight then
+                    smallestHeight = colSize
                     smallestHeightIndex = i
                 end
             end
         end
         if oneSize then
-            print("all columns are " .. firstSize .. " pieces tall")
-            print("going to try to drop piece on a duplicate")
-            local topPieces = { getTopPiece(board[1]), getTopPiece(board[2]), getTopPiece(board[3]), getTopPiece(board[4]) }
+            print("all columns are " .. firstSize .. " blocks tall")
+            print("going to try to drop block on a duplicate")
+            local topBlocks = { getTopBlock(board[1]), getTopBlock(board[2]), getTopBlock(board[3]), getTopBlock(board[4]) }
             --TODO: not ==
             --TODO: prioritize bottom eggs over duplicates and make them count
             for i = 1, 4 do
-                if not (hasValue(avoidPos, i)) and not (topPieces[i] == 0) and instancesOf(topPieces, topPieces[i]) > 1 then
+                if not (hasValue(avoidPos, i)) and topBlocks[i] ~= 0 and instancesOf(topBlocks, topBlocks[i]) > 1 then
                     print("duplicate found: " .. i)
                     return i
                 end
@@ -601,8 +419,6 @@ function bestPieceLocation(piece, avoidPos)
 end
 
 do
-    require "test"
-    testFunc()
     --stuff--
     --TODO: when finished, change "off" to "on"
     local settings = { "A", "1", "low", "1", "off" }
@@ -626,7 +442,8 @@ do
 
     --while memory address 00E3 isn't C
     --  aka egg has not shown up
-    while not (memory.readbyte(0x00E3) == 199) do
+    --TODO: WTF IS THIS???
+    while memory.readbyte(0x00E3) ~= 199 do
         emu.frameadvance()
     end
     joypad.set(1, { start = true })
@@ -634,7 +451,8 @@ do
 
     --while memory address 0261 isn't C
     --  aka flashing selector has not shown up
-    while not (memory.readbyte(0x0261) == 204) do
+    --TODO: WHY DID I DO THIS???
+    while memory.readbyte(0x0261) ~= 204 do
         emu.frameadvance()
     end
 
@@ -657,7 +475,7 @@ do
     emu.frameadvance()
 
     --set level
-    if not (settings[2] == "1") then
+    if settings[2] ~= "1" then
         --print("that is definitively not a 1, im sure of it")
         for _ = 2, (tonumber(settings[2])) do
             joypad.set(1, { right = true })
@@ -690,7 +508,7 @@ do
 
 
     --set music
-    if not (settings[4] == "1") then
+    if settings[4] ~= "1" then
         for i = 2, (tonumber(settings[4])) do
             joypad.set(1, { right = true })
             emu.frameadvance()
@@ -710,7 +528,9 @@ do
     emu.frameadvance()
 
     --messes up with b mode apparantly
-    while anyFallingPieces() do
+    --TODO: this is supposed to wait until the first blocks are rendered before sending them down
+    --bc of this not working, it will not try to calculate a place for the first set of blocks in B mode
+    while MemMap:areBlocksFalling() do
         print("waiting")
         joypad.set(1, { down = true })
         emu.frameadvance()
@@ -729,7 +549,7 @@ do
 
 
         readBoard()
-        placeFallingPieces()
+        placeFallingBlocks()
         emu.frameadvance()
 
     end

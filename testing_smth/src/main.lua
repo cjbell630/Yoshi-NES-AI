@@ -1,0 +1,3 @@
+require "util"
+
+testFunc()

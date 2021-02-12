@@ -11,20 +11,32 @@ require "read_memory" --memory functions
 --TODO: if needs to be more efficient, try to make all nums consecutive
 function simplifyMoves_Table(moves)
     print("simplifying " .. table.toString(moves))
+    local simBoard = board --TODO: does this copy values or address?
     if moves then
         local i = 1
         while i < #moves + 1 do
-            if i < #moves and moves[i] == moves[i + 1] then
-                --AA
+            local curPos = moves[i]
+
+            if i < #moves and curPos == moves[i + 1] then
+                --avoids swapping at the same position twice in a row
                 table.remove(moves, i)
                 table.remove(moves, i)
                 i = 1
-            elseif i < #moves - 2 and moves[i] == moves[i + 2] and moves[i + 1] == moves[i + 3] and areConsecutiveNums(moves[i], moves[i + 1]) then
-                --ABAB
+                simBoard = board --TODO: does this copy values or address?
+            elseif i < #moves - 2 and curPos == moves[i + 2] and moves[i + 1] == moves[i + 3] and areConsecutiveNums(curPos, moves[i + 1]) then
+                --avoids swapping in an ABAB pattern
                 table.remove(moves, i)
                 table.remove(moves, i + 2)
                 i = 1
-            else
+                simBoard = board --TODO: does this copy values or address?
+            elseif tablesEqualOrder(simBoard[curPos + 1], simBoard[curPos + 2]) then
+                --avoids swapping two columns if they're exactly the same
+                print("didn't swap empty columns")
+                table.remove(moves, i)
+                i = 1
+                simBoard = board --TODO: does this copy values or address?
+            else -- if move is okay
+                simBoard = swapTableSubTabs(simBoard, curPos + 1, curPos + 2)
                 i = i + 1
             end
         end
@@ -37,20 +49,20 @@ end
 
 function generateMoves_Table(goalBoard)
     print("generating moves")
-    local currentSimBoard = { 1, 2, 3, 4 }
+    local currentSimColPositions = { 1, 2, 3, 4 }
     local moves = {}
     local index = 1
     while not (
-            tablesEqualOrder(currentSimBoard, goalBoard) or index > #goalBoard
+            tablesEqualOrder(currentSimColPositions, goalBoard) or index > #goalBoard
     ) do
-        local simIndex = firstIndexOf(currentSimBoard, goalBoard[index])
-        table.insert(currentSimBoard, index, currentSimBoard[simIndex])
-        table.remove(currentSimBoard, simIndex + 1)
+        local simIndex = firstIndexOf(currentSimColPositions, goalBoard[index])
+        table.insert(currentSimColPositions, index, currentSimColPositions[simIndex])
+        table.remove(currentSimColPositions, simIndex + 1)
         for i = simIndex - 1, index, -1 do
             moves[#moves + 1] = i - 1
         end
         print("added moves to move column " .. simIndex .. " to position " .. index)
-        print("currentSimBoard = " .. table.toString(currentSimBoard))
+        print("currentSimBoard = " .. table.toString(currentSimColPositions))
         index = index + 1
     end
     print("done")
@@ -68,7 +80,9 @@ function swapAtAllPosInTable(moves)
             --TODO: Either find hex value that shows when they're all swapped and wait for that, or let it be stupid.
             --Letting it be stupid for now
             --if not(getTopBlock(getColumn(moves[i] + 1)) == getTopBlock(getColumn(moves[i] + 2))) then
+
             swapAtPos(moves[i])
+
             --[[else
                 print("avoided looking stupid :D")
                 print("didn't swap at pos "..moves[i].." because both sides are "..getTopBlock(getColumn(moves[i] + 1)))

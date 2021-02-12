@@ -146,14 +146,19 @@ do
     joypad.set(1, { start = true })
     emu.frameadvance()
 
-    --messes up with b mode apparantly
-    --TODO: this is supposed to wait until the first blocks are rendered before sending them down
-    --bc of this not working, it will not try to calculate a place for the first set of blocks in B mode
-    while MemMap:areBlocksFalling() do
+    --which only happens AFTER all the blocks are loaded in
+    while onlyHasValue(MemMap:fallingBlocks(), 0) do
         print("waiting")
         joypad.set(1, { down = true })
         emu.frameadvance()
     end
+    --0x046A is some random byte that stays as 40 (28 hex) until the stun timer for falling blocks is set,
+    while hasValue(readBytes(0x046A, 4), 40) do
+        print("waiting again")
+        emu.frameadvance()
+    end
+    print("starting falling blocks: " .. table.toString(MemMap:fallingBlocks()))
+    print("random byte thing: " .. memory.readbyte(0x046A))
 
 
 

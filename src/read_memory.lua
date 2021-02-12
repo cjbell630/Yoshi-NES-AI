@@ -21,7 +21,8 @@ Blocks = {
     BOTTOM_EGG = 6
 }
 
-local function readBytes(address, length)
+--TODO: should be local when I move that timer thingy to here
+function readBytes(address, length)
     local bytes = {}
     for i = 0, length - 1, 1 do
         bytes[i + 1] = memory.readbyte(address + i)

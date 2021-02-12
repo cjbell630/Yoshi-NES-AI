@@ -110,5 +110,15 @@ end
 
 --oc
 function areConsecutiveNums(num1, num2)
-    return num1 + 1 == num2 or num2 + 1 == num1
+    --same as (num1 + 1 == num2) or (num1 - 1 == num2)
+    return (num1 + 1 == num2) or (num2 + 1 == num1)
+end
+
+--TODO doc
+--TODO: if they were passed as params, then I modified the table, would it modify the og value?
+function swapTableSubTabs(table, index1, index2)
+    local temp = table[index1]
+    table[index1] = table[index2]
+    table[index2] = temp
+    return table
 end
